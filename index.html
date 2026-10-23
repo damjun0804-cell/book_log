@@ -161,6 +161,12 @@
       outline: none;
     }
 
+    input[type="file"] {
+      padding: 6px;
+      background: #f8fafc;
+      cursor: pointer;
+    }
+
     input:focus, textarea:focus {
       border-color: var(--accent-color);
     }
@@ -359,8 +365,8 @@
           <input type="text" id="publisher" placeholder="예: 밀리언서재 (2022)">
         </div>
         <div class="form-group full-width">
-          <label for="coverUrl">표지 이미지 URL</label>
-          <input type="url" id="coverUrl" placeholder="https://example.com/cover.jpg">
+          <label for="coverImageFile">표지 이미지 파일 선택</label>
+          <input type="file" id="coverImageFile" accept="image/*">
         </div>
         <div class="form-group">
           <label for="startDate">읽기 시작한 날짜</label>
@@ -507,14 +513,47 @@
       document.body.classList.remove('admin-mode');
     });
 
+    // 이미지 파일을 압축 및 Base64로 변환해주는 헬퍼 함수
+    function convertImageFile(file) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 400; // 가로 최대 크기 제한으로 용량 최적화
+            const scaleSize = MAX_WIDTH / img.width;
+            canvas.width = MAX_WIDTH;
+            canvas.height = img.height * scaleSize;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            // JPEG 형식으로 압축 변환 (품질 0.7)
+            resolve(canvas.toDataURL('image/jpeg', 0.7));
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
     bookForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+
+      const imageFile = document.getElementById('coverImageFile').files[0];
+      let coverUrl = "";
+
+      if (imageFile) {
+        // 파일이 존재하면 Base64 포맷으로 변환
+        coverUrl = await convertImageFile(imageFile);
+      }
 
       const newBook = {
         title: document.getElementById('title').value.trim(),
         author: document.getElementById('author').value.trim(),
         publisher: document.getElementById('publisher').value.trim(),
-        coverUrl: document.getElementById('coverUrl').value.trim(),
+        coverUrl: coverUrl,
         startDate: document.getElementById('startDate').value,
         endDate: document.getElementById('endDate').value,
         quotePage: document.getElementById('quotePage').value.trim(),
@@ -531,7 +570,7 @@
         document.body.classList.remove('admin-mode');
         loadBooks();
       } catch (error) {
-        alert("도서 등록 중 오류가 발생했습니다: " + error.message);
+        alert("도서 등록 중 오류가 발생했습니다 (이미지 용량이 너무 클 수 있습니다): " + error.message);
       }
     });
 
