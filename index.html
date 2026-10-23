@@ -1,1 +1,563 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book Log - 독서 기록장</title>
+  <style>
+    :root {
+      --bg-primary: #f8f9fa;
+      --bg-card: #ffffff;
+      --text-main: #212529;
+      --text-muted: #6c757d;
+      --border-color: #e9ecef;
+      --accent-color: #2b6cb0;
+      --accent-hover: #1c4ed8;
+      --quote-bg: #f1f5f9;
+      --quote-border: #cbd5e1;
+      --danger-color: #ef4444;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+      --radius: 12px;
+    }
 
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #1a202c;
+    }
+
+    .btn-primary {
+      background: var(--accent-color);
+      color: #ffffff;
+      border: none;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #334155;
+      border: none;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: #cbd5e1;
+    }
+
+    .search-bar {
+      margin-bottom: 2rem;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 0.95rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent-color);
+    }
+
+    .admin-panel {
+      background: var(--bg-card);
+      padding: 1.5rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      margin-bottom: 2.5rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .admin-header h2 {
+      font-size: 1.25rem;
+      color: #2d3748;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .form-group.full-width {
+      grid-column: span 2;
+    }
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #4a5568;
+    }
+
+    input, textarea {
+      padding: 8px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    input:focus, textarea:focus {
+      border-color: var(--accent-color);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 70px;
+    }
+
+    .submit-btn {
+      grid-column: span 2;
+      background: var(--accent-color);
+      color: white;
+      border: none;
+      padding: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 0.5rem;
+    }
+
+    .submit-btn:hover {
+      background: var(--accent-hover);
+    }
+
+    .book-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .book-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-color);
+      position: relative;
+    }
+
+    .card-top {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .book-cover {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .book-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .book-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #1e293b;
+      line-height: 1.3;
+    }
+
+    .book-meta {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    .meta-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: auto;
+    }
+
+    .tag {
+      background: #f1f5f9;
+      color: #475569;
+      font-size: 0.8rem;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 500;
+    }
+
+    .quote-box {
+      background: var(--quote-bg);
+      border-left: 4px solid var(--quote-border);
+      padding: 1rem 1.25rem;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 1rem;
+    }
+
+    .quote-header {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 0.3rem;
+    }
+
+    .quote-text {
+      font-size: 0.95rem;
+      font-style: italic;
+      color: #334155;
+    }
+
+    .review-box {
+      background: #f8fafc;
+      padding: 0.85rem 1rem;
+      border-radius: 8px;
+      font-size: 0.925rem;
+      color: #0f172a;
+    }
+
+    .review-title {
+      font-weight: 700;
+      margin-right: 0.4rem;
+    }
+
+    .delete-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: #fee2e2;
+      color: var(--danger-color);
+      border: none;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+      display: none;
+    }
+
+    .delete-btn:hover {
+      background: #fca5a5;
+    }
+
+    body.admin-mode .delete-btn {
+      display: block;
+    }
+
+    .empty-msg {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 640px) {
+      .card-top {
+        grid-template-columns: 1fr;
+      }
+      .book-cover {
+        width: 140px;
+        margin: 0 auto;
+      }
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .form-group.full-width, .submit-btn {
+        grid-column: span 1;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>📚 Book Log</h1>
+      <button class="btn-primary" id="btn-add-log">+ Add New Log</button>
+    </header>
+
+    <div class="admin-panel" id="admin-panel" style="display: none;">
+      <div class="admin-header">
+        <h2>새 도서 기록 추가</h2>
+        <button class="btn-secondary" id="btn-back-user">← 돌아가기</button>
+      </div>
+      <form id="book-form" class="form-grid">
+        <div class="form-group full-width">
+          <label for="title">도서 제목 *</label>
+          <input type="text" id="title" required placeholder="예: 50센티 더 가까워지는 선물보다 좋은 말">
+        </div>
+        <div class="form-group">
+          <label for="author">저자</label>
+          <input type="text" id="author" placeholder="예: 노구치 사토시">
+        </div>
+        <div class="form-group">
+          <label for="publisher">출판사 및 연도</label>
+          <input type="text" id="publisher" placeholder="예: 밀리언서재 (2022)">
+        </div>
+        <div class="form-group full-width">
+          <label for="coverUrl">표지 이미지 URL</label>
+          <input type="url" id="coverUrl" placeholder="https://example.com/cover.jpg">
+        </div>
+        <div class="form-group">
+          <label for="startDate">읽기 시작한 날짜</label>
+          <input type="date" id="startDate">
+        </div>
+        <div class="form-group">
+          <label for="endDate">완독한 날짜</label>
+          <input type="date" id="endDate">
+        </div>
+        <div class="form-group full-width">
+          <label for="quotePage">인상 깊은 구절 위치</label>
+          <input type="text" id="quotePage" placeholder="예: p. 101, 4번째 줄">
+        </div>
+        <div class="form-group full-width">
+          <label for="quoteContent">인상 깊은 구절 내용</label>
+          <textarea id="quoteContent" placeholder="책에서 감명 깊게 읽은 문장을 입력하세요."></textarea>
+        </div>
+        <div class="form-group full-width">
+          <label for="oneLineReview">한줄평 *</label>
+          <textarea id="oneLineReview" required placeholder="책에 대한 한줄평을 입력하세요."></textarea>
+        </div>
+        <button type="submit" class="submit-btn">도서 기록 저장하기</button>
+      </form>
+    </div>
+
+    <div class="search-bar">
+      <input type="text" id="search-input" class="search-input" placeholder="제목, 저자, 한줄평 키워드 검색...">
+    </div>
+
+    <main id="book-list" class="book-list">
+    </main>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDAm7ohTP6M7SK9tDb38Y_dbHKyC5grg-A",
+      authDomain: "book-log-5bea9.firebaseapp.com",
+      databaseURL: "https://book-log-5bea9-default-rtdb.firebaseio.com",
+      projectId: "book-log-5bea9",
+      storageBucket: "book-log-5bea9.firebasestorage.app",
+      messagingSenderId: "63285431759",
+      appId: "1:63285431759:web:1b8a6f0efbbb190de3d6ba"
+    };
+
+    const ENCODED_ADMIN_PW = "MjMxMg==";
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let booksData = [];
+
+    const btnAddLog = document.getElementById('btn-add-log');
+    const btnBackUser = document.getElementById('btn-back-user');
+    const adminPanel = document.getElementById('admin-panel');
+    const bookList = document.getElementById('book-list');
+    const bookForm = document.getElementById('book-form');
+    const searchInput = document.getElementById('search-input');
+
+    async function loadBooks() {
+      try {
+        const q = query(collection(db, "books"), orderBy("createdAt", "desc"));
+        const querySnapshot = await getDocs(q);
+        booksData = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        renderBooks(booksData);
+      } catch (error) {
+        console.error(error);
+        bookList.innerHTML = `<div class="empty-msg">데이터를 불러오는 중 오류가 발생했습니다.<br>Firebase Firestore 규칙 또는 설정을 확인해주세요.</div>`;
+      }
+    }
+
+    function renderBooks(books) {
+      bookList.innerHTML = '';
+
+      if (books.length === 0) {
+        bookList.innerHTML = `<div class="empty-msg">등록되거나 검색된 도서 기록이 없습니다.</div>`;
+        return;
+      }
+
+      books.forEach(book => {
+        const defaultCover = "https://via.placeholder.com/140x200?text=No+Cover";
+        const coverSrc = book.coverUrl && book.coverUrl.trim() !== "" ? book.coverUrl : defaultCover;
+        const dateText = (book.startDate || book.endDate) 
+          ? `📅 ${book.startDate || ''} ~ ${book.endDate || ''}`
+          : '';
+
+        const cardHTML = `
+          <article class="book-card" data-id="${book.id}">
+            <button class="delete-btn" onclick="deleteBookCard('${book.id}')">삭제</button>
+            <div class="card-top">
+              <img src="${coverSrc}" alt="${book.title} 표지" class="book-cover" onerror="this.src='${defaultCover}'">
+              <div class="book-info">
+                <h2 class="book-title">${escapeHtml(book.title)}</h2>
+                <p class="book-meta">${escapeHtml(book.author || '')} ${book.publisher ? '| ' + escapeHtml(book.publisher) : ''}</p>
+                <div class="meta-tags">
+                  ${dateText ? `<span class="tag">${escapeHtml(dateText)}</span>` : ''}
+                  ${book.quotePage ? `<span class="tag">💡 ${escapeHtml(book.quotePage)}</span>` : ''}
+                </div>
+              </div>
+            </div>
+
+            ${book.quoteContent ? `
+              <div class="quote-box">
+                <div class="quote-header">💡 인상 깊은 구절 ${book.quotePage ? `(${escapeHtml(book.quotePage)})` : ''}</div>
+                <div class="quote-text">"${escapeHtml(book.quoteContent)}"</div>
+              </div>
+            ` : ''}
+
+            <div class="review-box">
+              <span class="review-title">📝 한줄평:</span>
+              <span>${escapeHtml(book.oneLineReview || '')}</span>
+            </div>
+          </article>
+        `;
+        bookList.innerHTML += cardHTML;
+      });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    btnAddLog.addEventListener('click', () => {
+      const inputPw = prompt("관리자 비밀번호를 입력하세요:");
+      if (inputPw !== null) {
+        if (btoa(inputPw) === ENCODED_ADMIN_PW) {
+          adminPanel.style.display = 'block';
+          document.body.classList.add('admin-mode');
+          window.scrollTo({ top: adminPanel.offsetTop - 20, behavior: 'smooth' });
+        } else {
+          alert("비밀번호가 올바르지 않습니다.");
+        }
+      }
+    });
+
+    btnBackUser.addEventListener('click', () => {
+      adminPanel.style.display = 'none';
+      document.body.classList.remove('admin-mode');
+    });
+
+    bookForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const newBook = {
+        title: document.getElementById('title').value.trim(),
+        author: document.getElementById('author').value.trim(),
+        publisher: document.getElementById('publisher').value.trim(),
+        coverUrl: document.getElementById('coverUrl').value.trim(),
+        startDate: document.getElementById('startDate').value,
+        endDate: document.getElementById('endDate').value,
+        quotePage: document.getElementById('quotePage').value.trim(),
+        quoteContent: document.getElementById('quoteContent').value.trim(),
+        oneLineReview: document.getElementById('oneLineReview').value.trim(),
+        createdAt: new Date().toISOString()
+      };
+
+      try {
+        await addDoc(collection(db, "books"), newBook);
+        alert("성공적으로 도서 기록이 등록되었습니다!");
+        bookForm.reset();
+        adminPanel.style.display = 'none';
+        document.body.classList.remove('admin-mode');
+        loadBooks();
+      } catch (error) {
+        alert("도서 등록 중 오류가 발생했습니다: " + error.message);
+      }
+    });
+
+    window.deleteBookCard = async (id) => {
+      if (!confirm("정말 이 도서 기록을 삭제하시겠습니까?")) return;
+
+      try {
+        await deleteDoc(doc(db, "books", id));
+        alert("삭제되었습니다.");
+        loadBooks();
+      } catch (error) {
+        alert("삭제에 실패했습니다: " + error.message);
+      }
+    };
+
+    searchInput.addEventListener('input', (e) => {
+      const keyword = e.target.value.toLowerCase();
+      const filtered = booksData.filter(b => 
+        (b.title && b.title.toLowerCase().includes(keyword)) ||
+        (b.author && b.author.toLowerCase().includes(keyword)) ||
+        (b.oneLineReview && b.oneLineReview.toLowerCase().includes(keyword))
+      );
+      renderBooks(filtered);
+    });
+
+    loadBooks();
+  </script>
+</body>
+</html>
