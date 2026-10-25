@@ -63,19 +63,45 @@
       gap: 1rem;
     }
 
-    /* 관리자 모드에서만 보이는 방문자 수 스타일 */
+    /* 관리자 모드에서만 보이는 방문자 수 영역 */
+    .visit-count-wrapper {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      background: #eef2f7;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    body.admin-mode .visit-count-wrapper {
+      display: flex;
+    }
+
     .visit-count-badge {
       font-size: 0.85rem;
       font-weight: 600;
       color: var(--accent-color);
-      background: #eef2f7;
-      padding: 6px 12px;
-      border-radius: 6px;
-      display: none;
     }
 
-    body.admin-mode .visit-count-badge {
-      display: inline-block;
+    .count-minus-btn {
+      background: #cbd5e1;
+      color: #334155;
+      border: none;
+      width: 22px;
+      height: 22px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .count-minus-btn:hover {
+      background: #94a3b8;
+      color: white;
     }
 
     .btn-primary {
@@ -436,7 +462,10 @@
     <header>
       <h1>📚 Book Log</h1>
       <div class="header-right">
-        <span id="visit-count" class="visit-count-badge">👀 누적 조회수: 불러오는 중...</span>
+        <div class="visit-count-wrapper" id="visit-count-wrapper">
+          <span id="visit-count" class="visit-count-badge">👀 조회수: 불러오는 중...</span>
+          <button class="count-minus-btn" id="btn-minus-count" title="내 방문 카운트 취소(-1)">-</button>
+        </div>
         <button class="btn-primary" id="btn-add-log">+ Add New Log</button>
       </div>
     </header>
@@ -506,7 +535,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, push, get, remove, update, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, push, get, remove, update, runTransaction, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDAm7ohTP6M7SK9tDb38Y_dbHKyC5grg-A",
@@ -534,6 +563,7 @@
     const formHeading = document.getElementById('form-heading');
     const submitBtnText = document.getElementById('submit-btn-text');
     const editBookIdInput = document.getElementById('edit-book-id');
+    const btnMinusCount = document.getElementById('btn-minus-count');
 
     async function loadBooks() {
       try {
@@ -556,24 +586,48 @@
       }
     }
 
-    // 페이지 접속 시 조회수 증가 및 불러오기
+    // 일반 방문 시 조회수 증가
     async function countVisitor() {
       const visitCountRef = ref(db, 'stats/viewCount');
       try {
         await runTransaction(visitCountRef, (currentCount) => {
           return (currentCount || 0) + 1;
         });
-
-        const snapshot = await get(visitCountRef);
-        if (snapshot.exists()) {
-          const count = snapshot.val();
-          document.getElementById('visit-count').textContent = `👀 누적 조회수: ${count.toLocaleString()}회`;
-        }
+        updateVisitorDisplay();
       } catch (error) {
         console.error("방문자 수 업데이트 실패:", error);
         document.getElementById('visit-count').textContent = "👀 조회수 확인 불가";
       }
     }
+
+    // 현재 조회수 화면에 표시하는 함수
+    async function updateVisitorDisplay() {
+      const visitCountRef = ref(db, 'stats/viewCount');
+      try {
+        const snapshot = await get(visitCountRef);
+        if (snapshot.exists()) {
+          const count = snapshot.val();
+          document.getElementById('visit-count').textContent = `👀 조회수: ${count.toLocaleString()}회`;
+        }
+      } catch (error) {
+        console.error("조회수 불러오기 실패:", error);
+      }
+    }
+
+    // [-] 버튼 클릭 시 조회수 1 감소
+    btnMinusCount.addEventListener('click', async () => {
+      const visitCountRef = ref(db, 'stats/viewCount');
+      try {
+        await runTransaction(visitCountRef, (currentCount) => {
+          const newCount = (currentCount || 1) - 1;
+          return newCount < 0 ? 0 : newCount;
+        });
+        await updateVisitorDisplay();
+        alert("관리자 접속 건수가 차감(-1)되었습니다.");
+      } catch (error) {
+        alert("조회수 차감 중 오류가 발생했습니다: " + error.message);
+      }
+    });
 
     function renderBooks(books) {
       bookList.innerHTML = '';
@@ -673,6 +727,8 @@
 
           adminPanel.style.display = 'block';
           document.body.classList.add('admin-mode');
+          updateVisitorDisplay(); // 관리자 모드 진입 시 최신 조회수 로드
+
           window.scrollTo({ top: adminPanel.offsetTop - 20, behavior: 'smooth' });
         } else {
           alert("비밀번호가 올바르지 않습니다.");
@@ -729,7 +785,7 @@
 
       adminPanel.style.display = 'block';
       document.body.classList.add('admin-mode');
-      window.scrollTo({ top: adminPanel.offsetTop - 20, theight: 'smooth' });
+      window.scrollTo({ top: adminPanel.offsetTop - 20, behavior: 'smooth' });
     };
 
     bookForm.addEventListener('submit', async (e) => {
@@ -806,7 +862,7 @@
     });
 
     loadBooks();
-    countVisitor();
+    countVisitor(); // 일반 방문 카운트 증가 실행
   </script>
 </body>
 </html>
