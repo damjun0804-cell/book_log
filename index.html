@@ -57,6 +57,27 @@
       color: #1a202c;
     }
 
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    /* 관리자 모드에서만 보이는 방문자 수 스타일 */
+    .visit-count-badge {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent-color);
+      background: #eef2f7;
+      padding: 6px 12px;
+      border-radius: 6px;
+      display: none;
+    }
+
+    body.admin-mode .visit-count-badge {
+      display: inline-block;
+    }
+
     .btn-primary {
       background: var(--accent-color);
       color: #ffffff;
@@ -414,7 +435,10 @@
   <div class="container">
     <header>
       <h1>📚 Book Log</h1>
-      <button class="btn-primary" id="btn-add-log">+ Add New Log</button>
+      <div class="header-right">
+        <span id="visit-count" class="visit-count-badge">👀 누적 조회수: 불러오는 중...</span>
+        <button class="btn-primary" id="btn-add-log">+ Add New Log</button>
+      </div>
     </header>
 
     <div class="admin-panel" id="admin-panel" style="display: none;">
@@ -482,7 +506,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, push, get, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, push, get, remove, update, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDAm7ohTP6M7SK9tDb38Y_dbHKyC5grg-A",
@@ -532,6 +556,25 @@
       }
     }
 
+    // 페이지 접속 시 조회수 증가 및 불러오기
+    async function countVisitor() {
+      const visitCountRef = ref(db, 'stats/viewCount');
+      try {
+        await runTransaction(visitCountRef, (currentCount) => {
+          return (currentCount || 0) + 1;
+        });
+
+        const snapshot = await get(visitCountRef);
+        if (snapshot.exists()) {
+          const count = snapshot.val();
+          document.getElementById('visit-count').textContent = `👀 누적 조회수: ${count.toLocaleString()}회`;
+        }
+      } catch (error) {
+        console.error("방문자 수 업데이트 실패:", error);
+        document.getElementById('visit-count').textContent = "👀 조회수 확인 불가";
+      }
+    }
+
     function renderBooks(books) {
       bookList.innerHTML = '';
 
@@ -547,7 +590,6 @@
           ? `📅 ${book.startDate || ''} ~ ${book.endDate || ''}`
           : '';
 
-        // 진행률 계산
         let percent = Number(book.progressPercent) || 0;
         if (book.endDate) {
           percent = 100;
@@ -555,7 +597,6 @@
         if (percent > 100) percent = 100;
         if (percent < 0) percent = 0;
 
-        // 해시태그 파싱 및 렌더링 처리 (# 기호가 없으면 붙여주고, 쉼표나 공백 단위로 분리)
         let hashtagsHTML = '';
         if (book.hashtags && book.hashtags.trim() !== '') {
           const tagsArray = book.hashtags.split(/[,,\s]+/).filter(t => t.trim() !== '');
@@ -579,7 +620,6 @@
                 <h2 class="book-title">${escapeHtml(book.title)}</h2>
                 <p class="book-meta">${escapeHtml(book.author || '')} ${book.publisher ? '| ' + escapeHtml(book.publisher) : ''}</p>
                 
-                <!-- 저자와 진행률 사이 공백을 채우는 해시태그 영역 -->
                 ${hashtagsHTML}
 
                 <div class="meta-tags">
@@ -587,7 +627,6 @@
                   ${book.quotePage ? `<span class="tag">💡 ${escapeHtml(book.quotePage)}</span>` : ''}
                 </div>
                 
-                <!-- 독서 진행률 상태바 UI -->
                 <div class="progress-container">
                   <div class="progress-info">
                     <span>독서 진행률</span>
@@ -690,7 +729,7 @@
 
       adminPanel.style.display = 'block';
       document.body.classList.add('admin-mode');
-      window.scrollTo({ top: adminPanel.offsetTop - 20, behavior: 'smooth' });
+      window.scrollTo({ top: adminPanel.offsetTop - 20, theight: 'smooth' });
     };
 
     bookForm.addEventListener('submit', async (e) => {
@@ -755,7 +794,6 @@
       }
     };
 
-    // 검색 기능 (제목, 저자, 한줄평, 해시태그 포함 검색 가능)
     searchInput.addEventListener('input', (e) => {
       const keyword = e.target.value.toLowerCase();
       const filtered = booksData.filter(b => 
@@ -768,6 +806,7 @@
     });
 
     loadBooks();
+    countVisitor();
   </script>
 </body>
 </html>
