@@ -16,6 +16,8 @@
       --quote-bg: #f1f5f9;
       --quote-border: #cbd5e1;
       --danger-color: #ef4444;
+      --warning-color: #d97706;
+      --warning-hover: #b45309;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
       --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
       --radius: 12px;
@@ -194,6 +196,37 @@
       background: var(--accent-hover);
     }
 
+    /* 독서 진행률 상태바 UI */
+    .progress-container {
+      margin-top: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--accent-color);
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
     .book-list {
       display: flex;
       flex-direction: column;
@@ -292,10 +325,35 @@
       margin-right: 0.4rem;
     }
 
-    .delete-btn {
+    /* 관리자 버튼 그룹 */
+    .card-actions {
       position: absolute;
       top: 1rem;
       right: 1rem;
+      display: none;
+      gap: 6px;
+    }
+
+    body.admin-mode .card-actions {
+      display: flex;
+    }
+
+    .edit-btn {
+      background: #fef3c7;
+      color: var(--warning-color);
+      border: none;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .edit-btn:hover {
+      background: #fde68a;
+    }
+
+    .delete-btn {
       background: #fee2e2;
       color: var(--danger-color);
       border: none;
@@ -304,15 +362,10 @@
       font-weight: 600;
       border-radius: 4px;
       cursor: pointer;
-      display: none;
     }
 
     .delete-btn:hover {
       background: #fca5a5;
-    }
-
-    body.admin-mode .delete-btn {
-      display: block;
     }
 
     .empty-msg {
@@ -348,10 +401,11 @@
 
     <div class="admin-panel" id="admin-panel" style="display: none;">
       <div class="admin-header">
-        <h2>새 도서 기록 추가</h2>
+        <h2 id="form-heading">새 도서 기록 추가</h2>
         <button class="btn-secondary" id="btn-back-user">← 돌아가기</button>
       </div>
       <form id="book-form" class="form-grid">
+        <input type="hidden" id="edit-book-id">
         <div class="form-group full-width">
           <label for="title">도서 제목 *</label>
           <input type="text" id="title" required placeholder="예: 50센티 더 가까워지는 선물보다 좋은 말">
@@ -373,8 +427,12 @@
           <input type="date" id="startDate">
         </div>
         <div class="form-group">
-          <label for="endDate">완독한 날짜</label>
+          <label for="endDate">완독한 날짜 (미완독 시 비워두세요)</label>
           <input type="date" id="endDate">
+        </div>
+        <div class="form-group full-width">
+          <label for="progressPercent">독서 진행률 (%)</label>
+          <input type="number" id="progressPercent" min="0" max="100" value="0" placeholder="예: 45 (완독 시 자동으로 100% 처리 가능)">
         </div>
         <div class="form-group full-width">
           <label for="quotePage">인상 깊은 구절 위치</label>
@@ -388,7 +446,7 @@
           <label for="oneLineReview">한줄평 *</label>
           <textarea id="oneLineReview" required placeholder="책에 대한 한줄평을 입력하세요."></textarea>
         </div>
-        <button type="submit" class="submit-btn">도서 기록 저장하기</button>
+        <button type="submit" class="submit-btn" id="submit-btn-text">도서 기록 저장하기</button>
       </form>
     </div>
 
@@ -402,7 +460,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, push, get, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, push, get, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDAm7ohTP6M7SK9tDb38Y_dbHKyC5grg-A",
@@ -427,6 +485,9 @@
     const bookList = document.getElementById('book-list');
     const bookForm = document.getElementById('book-form');
     const searchInput = document.getElementById('search-input');
+    const formHeading = document.getElementById('form-heading');
+    const submitBtnText = document.getElementById('submit-btn-text');
+    const editBookIdInput = document.getElementById('edit-book-id');
 
     async function loadBooks() {
       try {
@@ -440,7 +501,6 @@
               ...childSnapshot.val()
             });
           });
-          // 최신 등록순으로 정렬
           booksData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         }
         renderBooks(booksData);
@@ -465,9 +525,20 @@
           ? `📅 ${book.startDate || ''} ~ ${book.endDate || ''}`
           : '';
 
+        // 진행률 계산 (완독일이 있거나 진행률이 100이면 100%, 아니면 입력된 진행률 반영)
+        let percent = Number(book.progressPercent) || 0;
+        if (book.endDate) {
+          percent = 100;
+        }
+        if (percent > 100) percent = 100;
+        if (percent < 0) percent = 0;
+
         const cardHTML = `
           <article class="book-card" data-id="${book.id}">
-            <button class="delete-btn" onclick="deleteBookCard('${book.id}')">삭제</button>
+            <div class="card-actions">
+              <button class="edit-btn" onclick="openEditModal('${book.id}')">수정</button>
+              <button class="delete-btn" onclick="deleteBookCard('${book.id}')">삭제</button>
+            </div>
             <div class="card-top">
               <img src="${coverSrc}" alt="${book.title} 표지" class="book-cover" onerror="this.src='${defaultCover}'">
               <div class="book-info">
@@ -477,6 +548,18 @@
                   ${dateText ? `<span class="tag">${escapeHtml(dateText)}</span>` : ''}
                   ${book.quotePage ? `<span class="tag">💡 ${escapeHtml(book.quotePage)}</span>` : ''}
                 </div>
+                
+                <!-- 독서 진행률 상태바 UI -->
+                <div class="progress-container">
+                  <div class="progress-info">
+                    <span>독서 진행률</span>
+                    <span>${percent}%</span>
+                  </div>
+                  <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" style="width: ${percent}%;"></div>
+                  </div>
+                </div>
+
               </div>
             </div>
 
@@ -506,6 +589,12 @@
       const inputPw = prompt("관리자 비밀번호를 입력하세요:");
       if (inputPw !== null) {
         if (btoa(inputPw) === ENCODED_ADMIN_PW) {
+          // 추가 모드로 폼 초기화
+          editBookIdInput.value = "";
+          formHeading.textContent = "새 도서 기록 추가";
+          submitBtnText.textContent = "도서 기록 저장하기";
+          bookForm.reset();
+
           adminPanel.style.display = 'block';
           document.body.classList.add('admin-mode');
           window.scrollTo({ top: adminPanel.offsetTop - 20, behavior: 'smooth' });
@@ -520,7 +609,6 @@
       document.body.classList.remove('admin-mode');
     });
 
-    // 이미지 파일을 압축 및 Base64로 변환해주는 헬퍼 함수
     function convertImageFile(file) {
       return new Promise((resolve) => {
         const reader = new FileReader();
@@ -528,15 +616,13 @@
           const img = new Image();
           img.onload = () => {
             const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 400; // 가로 최대 크기 제한으로 용량 최적화
+            const MAX_WIDTH = 400;
             const scaleSize = MAX_WIDTH / img.width;
             canvas.width = MAX_WIDTH;
             canvas.height = img.height * scaleSize;
             
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            
-            // JPEG 형식으로 압축 변환 (품질 0.7)
             resolve(canvas.toDataURL('image/jpeg', 0.7));
           };
           img.src = e.target.result;
@@ -544,6 +630,31 @@
         reader.readAsDataURL(file);
       });
     }
+
+    // 각 도서 카드에서 [수정] 버튼을 눌렀을 때 실행되는 함수 (관리자 모드 상태에서만 노출됨)
+    window.openEditModal = (id) => {
+      const book = booksData.find(b => b.id === id);
+      if (!book) return;
+
+      editBookIdInput.value = book.id;
+      document.getElementById('title').value = book.title || '';
+      document.getElementById('author').value = book.author || '';
+      document.getElementById('publisher').value = book.publisher || '';
+      document.getElementById('startDate').value = book.startDate || '';
+      document.getElementById('endDate').value = book.endDate || '';
+      document.getElementById('progressPercent').value = book.progressPercent || 0;
+      document.getElementById('quotePage').value = book.quotePage || '';
+      document.getElementById('quoteContent').value = book.quoteContent || '';
+      document.getElementById('oneLineReview').value = book.oneLineReview || '';
+      document.getElementById('coverImageFile').value = ''; // 파일 input은 보안상 값 설정 불가
+
+      formHeading.textContent = "도서 기록 수정하기";
+      submitBtnText.textContent = "수정사항 저장하기";
+
+      adminPanel.style.display = 'block';
+      document.body.classList.add('admin-mode');
+      window.scrollTo({ top: adminPanel.offsetTop - 20, behavior: 'smooth' });
+    };
 
     bookForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -555,29 +666,43 @@
         coverUrl = await convertImageFile(imageFile);
       }
 
-      const newBook = {
+      const editId = editBookIdInput.value;
+      const existingBook = editId ? booksData.find(b => b.id === editId) : null;
+
+      const bookData = {
         title: document.getElementById('title').value.trim(),
         author: document.getElementById('author').value.trim(),
         publisher: document.getElementById('publisher').value.trim(),
-        coverUrl: coverUrl,
+        coverUrl: coverUrl !== "" ? coverUrl : (existingBook ? existingBook.coverUrl : ""),
         startDate: document.getElementById('startDate').value,
         endDate: document.getElementById('endDate').value,
+        progressPercent: document.getElementById('progressPercent').value,
         quotePage: document.getElementById('quotePage').value.trim(),
         quoteContent: document.getElementById('quoteContent').value.trim(),
         oneLineReview: document.getElementById('oneLineReview').value.trim(),
-        createdAt: new Date().toISOString()
       };
 
       try {
-        const booksRef = ref(db, "books");
-        await push(booksRef, newBook);
-        alert("성공적으로 도서 기록이 등록되었습니다!");
+        if (editId) {
+          // 수정 모드
+          const bookRef = ref(db, `books/${editId}`);
+          await update(bookRef, bookData);
+          alert("도서 기록이 성공적으로 수정되었습니다!");
+        } else {
+          // 신규 등록 모드
+          bookData.createdAt = new Date().toISOString();
+          const booksRef = ref(db, "books");
+          await push(booksRef, bookData);
+          alert("성공적으로 도서 기록이 등록되었습니다!");
+        }
+
         bookForm.reset();
+        editBookIdInput.value = "";
         adminPanel.style.display = 'none';
         document.body.classList.remove('admin-mode');
         loadBooks();
       } catch (error) {
-        alert("도서 등록 중 오류가 발생했습니다 (이미지 용량이 너무 클 수 있습니다): " + error.message);
+        alert("처리 중 오류가 발생했습니다: " + error.message);
       }
     });
 
