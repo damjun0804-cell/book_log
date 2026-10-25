@@ -402,7 +402,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getDatabase, ref, push, get, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDAm7ohTP6M7SK9tDb38Y_dbHKyC5grg-A",
@@ -417,7 +417,7 @@
     const ENCODED_ADMIN_PW = "MjMxMg==";
 
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    const db = getDatabase(app);
 
     let booksData = [];
 
@@ -430,16 +430,23 @@
 
     async function loadBooks() {
       try {
-        const q = query(collection(db, "books"), orderBy("createdAt", "desc"));
-        const querySnapshot = await getDocs(q);
-        booksData = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
+        const booksRef = ref(db, "books");
+        const snapshot = await get(booksRef);
+        booksData = [];
+        if (snapshot.exists()) {
+          snapshot.forEach((childSnapshot) => {
+            booksData.push({
+              id: childSnapshot.key,
+              ...childSnapshot.val()
+            });
+          });
+          // 최신 등록순으로 정렬
+          booksData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        }
         renderBooks(booksData);
       } catch (error) {
         console.error(error);
-        bookList.innerHTML = `<div class="empty-msg">데이터를 불러오는 중 오류가 발생했습니다.<br>Firebase Firestore 규칙 또는 설정을 확인해주세요.</div>`;
+        bookList.innerHTML = `<div class="empty-msg">데이터를 불러오는 중 오류가 발생했습니다.<br>Firebase Realtime Database 규칙 또는 설정을 확인해주세요.</div>`;
       }
     }
 
@@ -545,7 +552,6 @@
       let coverUrl = "";
 
       if (imageFile) {
-        // 파일이 존재하면 Base64 포맷으로 변환
         coverUrl = await convertImageFile(imageFile);
       }
 
@@ -563,7 +569,8 @@
       };
 
       try {
-        await addDoc(collection(db, "books"), newBook);
+        const booksRef = ref(db, "books");
+        await push(booksRef, newBook);
         alert("성공적으로 도서 기록이 등록되었습니다!");
         bookForm.reset();
         adminPanel.style.display = 'none';
@@ -578,7 +585,8 @@
       if (!confirm("정말 이 도서 기록을 삭제하시겠습니까?")) return;
 
       try {
-        await deleteDoc(doc(db, "books", id));
+        const bookRef = ref(db, `books/${id}`);
+        await remove(bookRef);
         alert("삭제되었습니다.");
         loadBooks();
       } catch (error) {
