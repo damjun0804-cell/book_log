@@ -63,7 +63,6 @@
       gap: 1rem;
     }
 
-    /* 관리자 모드에서만 보이는 방문자 수 영역 */
     .visit-count-wrapper {
       display: none;
       align-items: center;
@@ -243,7 +242,6 @@
       background: var(--accent-hover);
     }
 
-    /* 해시태그 영역 스타일 */
     .hashtag-list {
       display: flex;
       flex-wrap: wrap;
@@ -260,7 +258,6 @@
       border-radius: 4px;
     }
 
-    /* 독서 진행률 상태바 UI */
     .progress-container {
       margin-top: 0.75rem;
       display: flex;
@@ -390,7 +387,6 @@
       margin-right: 0.4rem;
     }
 
-    /* 관리자 버튼 그룹 */
     .card-actions {
       position: absolute;
       top: 1rem;
@@ -586,7 +582,6 @@
       }
     }
 
-    // 일반 방문 시 조회수 증가
     async function countVisitor() {
       const visitCountRef = ref(db, 'stats/viewCount');
       try {
@@ -600,7 +595,6 @@
       }
     }
 
-    // 현재 조회수 화면에 표시하는 함수
     async function updateVisitorDisplay() {
       const visitCountRef = ref(db, 'stats/viewCount');
       try {
@@ -614,7 +608,6 @@
       }
     }
 
-    // [-] 버튼 클릭 시 조회수 1 감소
     btnMinusCount.addEventListener('click', async () => {
       const visitCountRef = ref(db, 'stats/viewCount');
       try {
@@ -678,7 +671,6 @@
 
                 <div class="meta-tags">
                   ${dateText ? `<span class="tag">${escapeHtml(dateText)}</span>` : ''}
-                  ${book.quotePage ? `<span class="tag">💡 ${escapeHtml(book.quotePage)}</span>` : ''}
                 </div>
                 
                 <div class="progress-container">
@@ -727,7 +719,7 @@
 
           adminPanel.style.display = 'block';
           document.body.classList.add('admin-mode');
-          updateVisitorDisplay(); // 관리자 모드 진입 시 최신 조회수 로드
+          updateVisitorDisplay();
 
           window.scrollTo({ top: adminPanel.offsetTop - 20, behavior: 'smooth' });
         } else {
@@ -862,7 +854,7 @@
     });
 
     loadBooks();
-    countVisitor(); // 일반 방문 카운트 증가 실행
+    countVisitor();
   </script>
 </body>
 </html>
