@@ -595,6 +595,19 @@
       }
     }
 
+    async function decrementVisitorCount() {
+      const visitCountRef = ref(db, 'stats/viewCount');
+      try {
+        await runTransaction(visitCountRef, (currentCount) => {
+          const newCount = (currentCount || 1) - 1;
+          return newCount < 0 ? 0 : newCount;
+        });
+        await updateVisitorDisplay();
+      } catch (error) {
+        console.error("조회수 차감 중 오류 발생:", error);
+      }
+    }
+
     async function updateVisitorDisplay() {
       const visitCountRef = ref(db, 'stats/viewCount');
       try {
@@ -609,17 +622,7 @@
     }
 
     btnMinusCount.addEventListener('click', async () => {
-      const visitCountRef = ref(db, 'stats/viewCount');
-      try {
-        await runTransaction(visitCountRef, (currentCount) => {
-          const newCount = (currentCount || 1) - 1;
-          return newCount < 0 ? 0 : newCount;
-        });
-        await updateVisitorDisplay();
-        alert("관리자 접속 건수가 차감(-1)되었습니다.");
-      } catch (error) {
-        alert("조회수 차감 중 오류가 발생했습니다: " + error.message);
-      }
+      await decrementVisitorCount();
     });
 
     function renderBooks(books) {
@@ -708,7 +711,7 @@
       return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
 
-    btnAddLog.addEventListener('click', () => {
+    btnAddLog.addEventListener('click', async () => {
       const inputPw = prompt("관리자 비밀번호를 입력하세요:");
       if (inputPw !== null) {
         if (btoa(inputPw) === ENCODED_ADMIN_PW) {
@@ -719,7 +722,9 @@
 
           adminPanel.style.display = 'block';
           document.body.classList.add('admin-mode');
-          updateVisitorDisplay();
+          
+          // 관리자 인증 성공 시 접속 건수 -1 자동 차감
+          await decrementVisitorCount();
 
           window.scrollTo({ top: adminPanel.offsetTop - 20, behavior: 'smooth' });
         } else {
