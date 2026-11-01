@@ -368,7 +368,6 @@
       margin-bottom: 0.3rem;
     }
 
-    /* 줄바꿈(엔터) 유지를 위한 CSS 수정 */
     .quote-text {
       font-size: 0.95rem;
       font-style: italic;
@@ -377,7 +376,6 @@
       word-break: break-word;
     }
 
-    /* 줄바꿈(엔터) 유지를 위한 CSS 수정 */
     .review-box {
       background: #f8fafc;
       padding: 0.85rem 1rem;
@@ -698,14 +696,11 @@
             ${book.quoteContent ? `
               <div class="quote-box">
                 <div class="quote-header">💡 인상 깊은 구절 ${book.quotePage ? `(${escapeHtml(book.quotePage)})` : ''}</div>
-                <div class="quote-text">${escapeHtml(book.quoteContent)}</div>
+                <div class="quote-text">"${escapeHtml(book.quoteContent)}"</div>
               </div>
             ` : ''}
 
-            <div class="review-box">
-              <span class="review-title">📝 한줄평:</span>
-              <span>${escapeHtml(book.oneLineReview || '')}</span>
-            </div>
+            <div class="review-box"><span class="review-title">📝 한줄평:</span><span>${escapeHtml(book.oneLineReview || '')}</span></div>
           </article>
         `;
         bookList.innerHTML += cardHTML;
@@ -729,7 +724,6 @@
           adminPanel.style.display = 'block';
           document.body.classList.add('admin-mode');
           
-          // 관리자 인증 성공 시 접속 건수 -1 자동 차감
           await decrementVisitorCount();
 
           window.scrollTo({ top: adminPanel.offsetTop - 20, behavior: 'smooth' });
