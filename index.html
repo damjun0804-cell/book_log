@@ -70,6 +70,8 @@ label{font-size:.8rem;font-weight:700;color:var(--muted)}
 .shelf{display:flex;flex-wrap:wrap;gap:.7rem;align-items:flex-end;padding:.9rem 1rem;margin-bottom:1.1rem;background:var(--soft);border-radius:12px}.shelf b{width:100%;font-size:.85rem}.shelf label{display:flex;flex-direction:column;gap:.25rem;flex:1;min-width:140px}.shelf input{padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text);font:inherit;outline:0}.shelf input:focus{border-color:var(--accent)}
 .empty{text-align:center;color:var(--muted);padding:3rem 1rem}
 .note{font-size:.75rem;color:var(--muted);text-align:center;margin-top:2rem}
+img.cover{cursor:zoom-in}
+.lb{position:fixed;inset:0;background:rgba(0,0,0,.82);display:none;place-items:center;z-index:100;padding:1.5rem;cursor:zoom-out;opacity:0;transition:opacity .25s}.lb.on{opacity:1}.lb img{max-width:min(92vw,480px);max-height:88vh;border-radius:12px;box-shadow:0 30px 80px rgba(0,0,0,.6);transform:scale(.92);transition:transform .25s}.lb.on img{transform:none}
 @media(max-width:680px){.stats{grid-template-columns:repeat(3,1fr);gap:.5rem}.stat{padding:.75rem}.stat b{font-size:1.4rem}.charts{grid-template-columns:1fr}.top{grid-template-columns:1fr}.cover{margin:0 auto}.title{padding-right:0}.grid{grid-template-columns:1fr}.f.full{grid-column:span 1}.acts{position:static;margin-bottom:.6rem;justify-content:flex-end}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -115,6 +117,7 @@ label{font-size:.8rem;font-weight:700;color:var(--muted)}
   <div class="search"><input id="q" placeholder="제목, 저자, 한줄평, 해시태그 검색…"></div>
   <main class="list" id="list"></main>
   <p class="note" id="note"></p>
+  <div class="lb" id="lb"><img id="lbImg" alt="표지 크게 보기"></div>
 </div>
 
 <script>
@@ -246,8 +249,11 @@ $('add').onclick=async()=>{
 };
 $('sSave').onclick=async()=>{try{await st.setCounters({lending:Math.max(0,+$('sLend').value||0),wish:Math.max(0,+$('sWish').value||0)});shelf=await st.counters();renderStats(books)}catch(e){alert('저장 실패: '+e.message)}};
 $('back').onclick=closePanel;
+function openLb(src){$('lbImg').src=src;const l=$('lb');l.style.display='grid';requestAnimationFrame(()=>l.classList.add('on'))}
+function closeLb(){const l=$('lb');l.classList.remove('on');setTimeout(()=>{l.style.display='none'},250)}
+$('lb').onclick=closeLb;addEventListener('keydown',e=>{if(e.key==='Escape')closeLb()});
 $('list').onclick=async e=>{
-  const a=e.target.dataset.a;if(!a)return;
+  if(e.target.matches('img.cover')){openLb(e.target.src);return}const a=e.target.dataset.a;if(!a)return;
   const id=e.target.closest('.book').dataset.id,b=books.find(x=>x.id===id);
   if(a==='del'){if(!confirm('정말 이 도서 기록을 삭제하시겠습니까?'))return;await st.del(id);await load()}
   if(a==='edit'){
