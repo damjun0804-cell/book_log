@@ -79,7 +79,7 @@ label{font-size:.8rem;font-weight:700;color:var(--muted)}
 <body>
 <div class="wrap">
   <header>
-    <div><h1>📚 <span>Book Log</span></h1><p class="sub" id="sub">나의 독서 기록</p></div>
+    <div><h1>📚 <span>Book Log</span></h1></div>
     <div class="hr">
       <div class="views"><span id="views">👀 …</span><button id="minus" title="조회수 -1">−</button></div>
       <button class="btn ghost icon" id="theme" title="테마">🌓</button>
@@ -211,10 +211,7 @@ function render(list,animate=true){
   document.querySelectorAll('.book').forEach(card=>{
     const fill=card.querySelector('.bar i'),w=fill.dataset.w+'%';
     const go=()=>{try{M.animate&&M.animate(fill,{width:['0%',w]},{duration:1.1,ease:[.22,1,.36,1]})}catch(e){}fill.style.width=w};
-    if(animate){
-      card.style.opacity=0;
-      let done=0;const show=()=>{if(done)return;done=1;card.style.opacity=1;try{M.animate&&M.animate(card,{opacity:[0,1],transform:['translateY(36px) scale(.97)','none']},{duration:.7,ease:[.22,1,.36,1]})}catch(e){}go()};if('IntersectionObserver' in window){const io=new IntersectionObserver(es=>{if(es.some(x=>x.isIntersecting)){io.disconnect();show()}},{rootMargin:'0px 0px -60px 0px'});io.observe(card)}else show();
-    }else{card.style.opacity=1;fill.style.width=w}
+    card.style.opacity=1;fill.style.width=w;
     if(M.animate){
       card.addEventListener('mouseenter',()=>M.animate(card,{transform:'translateY(-4px)'},{type:'spring',stiffness:300,damping:20}));
       card.addEventListener('mouseleave',()=>M.animate(card,{transform:'translateY(0px)'},{type:'spring',stiffness:300,damping:20}));
