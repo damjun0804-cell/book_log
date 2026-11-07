@@ -34,7 +34,7 @@ body.admin .views{display:flex}
 .chart{padding:1rem 1.1rem}
 .chart h3{font-size:.8rem;color:var(--muted);font-weight:600;margin-bottom:.4rem}
 .chart svg{width:100%;height:auto;display:block;overflow:visible}
-.chart text{fill:var(--muted);font-size:10px}.chart text.cnt{fill:var(--text);font-weight:700;font-size:11px;pointer-events:none}
+.chart text{fill:var(--muted);font-size:13px}.chart text.cnt{fill:var(--text);font-weight:700;font-size:14px;pointer-events:none}
 .search{position:relative;margin-bottom:1.4rem}
 .search input{width:100%;padding:13px 16px 13px 42px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;outline:0;box-shadow:var(--shadow)}
 .search input:focus{border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)}
@@ -74,7 +74,7 @@ label{font-size:.8rem;font-weight:700;color:var(--muted)}
 .note{font-size:.75rem;color:var(--muted);text-align:center;margin-top:2rem}
 img.cover{cursor:zoom-in}
 .lb{position:fixed;inset:0;background:rgba(0,0,0,.82);display:none;place-items:center;z-index:100;padding:1.5rem;cursor:zoom-out;opacity:0;transition:opacity .25s}.lb.on{opacity:1}.lb img{max-width:min(92vw,480px);max-height:88vh;border-radius:12px;box-shadow:0 30px 80px rgba(0,0,0,.6);transform:scale(.92);transition:transform .25s}.lb.on img{transform:none}
-@media(max-width:680px){.stats{grid-template-columns:repeat(3,1fr);gap:.5rem}.stat{padding:.75rem}.stat b{font-size:1.4rem}.charts{grid-template-columns:1fr}.top{grid-template-columns:1fr}.cover{margin:0 auto}.title{padding-right:0}.grid{grid-template-columns:1fr}.f.full{grid-column:span 1}.acts{position:static;margin-bottom:.6rem;justify-content:flex-end}}
+@media(max-width:680px){.stats{grid-template-columns:repeat(3,1fr);gap:.5rem}.stat{padding:.75rem}.stat b{font-size:1.4rem}.charts{grid-template-columns:1fr}.chart text{font-size:13px}.chart text.cnt{font-size:14px}.top{grid-template-columns:1fr}.cover{margin:0 auto}.title{padding-right:0}.grid{grid-template-columns:1fr}.f.full{grid-column:span 1}.acts{position:static;margin-bottom:.6rem;justify-content:flex-end}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
@@ -174,11 +174,12 @@ function renderCharts(list){
   const now=new Date(),months=[];
   for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({k:d.getFullYear()*12+d.getMonth(),l:(d.getMonth()+1)+'월',n:0})}
   list.forEach(b=>{const d=new Date(b.endDate||b.createdAt||b.startDate);const m=months.find(x=>x.k===d.getFullYear()*12+d.getMonth());if(m)m.n++});
-  const mx=Math.max(1,...months.map(m=>m.n)),W=800,H=120,px=i=>20+i*(W-40)/5,py=n=>H-8-(n/mx)*(H-30);
+  const mx=Math.max(1,...months.map(m=>m.n)),W=(innerWidth<=680?400:800),H=120,px=i=>20+i*(W-40)/5,py=n=>H-8-(n/mx)*(H-30);
   const pts=months.map((m,i)=>[px(i),py(m.n)]);
   const line=pts.map((p,i)=>(i?'L':'M')+p[0]+' '+p[1]).join(' ');
+  $('area').setAttribute('viewBox','0 0 '+W+' 150');
   $('area').innerHTML=`<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".35"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
-   ${[0,.5,1].map(t=>`<line x1="20" x2="780" y1="${H-8-t*(H-30)}" y2="${H-8-t*(H-30)}" stroke="var(--line)" stroke-dasharray="3 4"/>`).join('')}
+   ${[0,.5,1].map(t=>`<line x1="20" x2="${W-20}" y1="${H-8-t*(H-30)}" y2="${H-8-t*(H-30)}" stroke="var(--line)" stroke-dasharray="3 4"/>`).join('')}
    <path id="fill" d="${line} L${px(5)} ${H-8} L${px(0)} ${H-8}Z" fill="url(#g)" opacity="0"/>
    <path id="ln" d="${line}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
    ${pts.map((p,i)=>`<circle class="dot" cx="${p[0]}" cy="${p[1]}" r="4" fill="var(--card)" stroke="var(--accent)" stroke-width="2"><title>${months[i].l}: ${months[i].n}권</title></circle>`).join('')}
@@ -279,6 +280,7 @@ $('q').oninput=e=>{const k=e.target.value.toLowerCase();
   render(books.filter(b=>[b.title,b.author,b.oneLineReview,b.hashtags].some(v=>v&&v.toLowerCase().includes(k))),false)};
 $('theme').onclick=()=>{const r=document.documentElement,dark=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme:dark)').matches;r.dataset.theme=dark?'light':'dark'};
 
+let wasM=innerWidth<=680;addEventListener('resize',()=>{const m=innerWidth<=680;if(m!==wasM){wasM=m;renderCharts(books)}});
 addEventListener('pageshow',e=>{if(e.persisted)location.reload()});
 if(A)A({targets:'header > *',opacity:[0,1],translateY:[-14,0],delay:A.stagger(100),duration:700,easing:'easeOutCubic'});
 await load();
