@@ -29,7 +29,7 @@ body.admin .views{display:flex}
 .stat{padding:1rem 1.1rem}
 .stat small{color:var(--muted);font-size:.75rem;font-weight:600}
 .stat b{display:block;font-size:1.7rem;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-.charts{display:grid;grid-template-columns:3fr 2fr;gap:.8rem;margin-bottom:1.6rem}
+.charts{display:grid;grid-template-columns:1fr;gap:.8rem;margin-bottom:1.6rem}
 .chart{padding:1rem 1.1rem}
 .chart h3{font-size:.8rem;color:var(--muted);font-weight:600;margin-bottom:.4rem}
 .chart svg{width:100%;height:auto;display:block;overflow:visible}
@@ -108,8 +108,8 @@ label{font-size:.8rem;font-weight:700;color:var(--muted)}
 
   <section class="stats" id="stats"></section>
   <section class="charts">
-    <div class="chart"><h3>월별 독서 기록</h3><svg id="area" viewBox="0 0 400 150"></svg></div>
-    <div class="chart"><h3>자주 쓴 해시태그</h3><svg id="bars" viewBox="0 0 260 150"></svg></div>
+    <div class="chart"><h3>월별 독서 기록</h3><svg id="area" viewBox="0 0 800 150"></svg></div>
+    
   </section>
 
   <div class="search"><input id="q" placeholder="제목, 저자, 한줄평, 해시태그 검색…"></div>
@@ -168,11 +168,11 @@ function renderCharts(list){
   const now=new Date(),months=[];
   for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({k:d.getFullYear()*12+d.getMonth(),l:(d.getMonth()+1)+'월',n:0})}
   list.forEach(b=>{const d=new Date(b.endDate||b.createdAt||b.startDate);const m=months.find(x=>x.k===d.getFullYear()*12+d.getMonth());if(m)m.n++});
-  const mx=Math.max(1,...months.map(m=>m.n)),W=400,H=120,px=i=>20+i*(W-40)/5,py=n=>H-8-(n/mx)*(H-30);
+  const mx=Math.max(1,...months.map(m=>m.n)),W=800,H=120,px=i=>20+i*(W-40)/5,py=n=>H-8-(n/mx)*(H-30);
   const pts=months.map((m,i)=>[px(i),py(m.n)]);
   const line=pts.map((p,i)=>(i?'L':'M')+p[0]+' '+p[1]).join(' ');
   $('area').innerHTML=`<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".35"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
-   ${[0,.5,1].map(t=>`<line x1="20" x2="380" y1="${H-8-t*(H-30)}" y2="${H-8-t*(H-30)}" stroke="var(--line)" stroke-dasharray="3 4"/>`).join('')}
+   ${[0,.5,1].map(t=>`<line x1="20" x2="780" y1="${H-8-t*(H-30)}" y2="${H-8-t*(H-30)}" stroke="var(--line)" stroke-dasharray="3 4"/>`).join('')}
    <path id="fill" d="${line} L${px(5)} ${H-8} L${px(0)} ${H-8}Z" fill="url(#g)" opacity="0"/>
    <path id="ln" d="${line}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
    ${pts.map((p,i)=>`<circle class="dot" cx="${p[0]}" cy="${p[1]}" r="4" fill="var(--card)" stroke="var(--accent)" stroke-width="2"><title>${months[i].l}: ${months[i].n}권</title></circle>`).join('')}
@@ -180,7 +180,7 @@ function renderCharts(list){
    ${months.map((m,i)=>`<text x="${px(i)}" y="145" text-anchor="middle">${m.l}</text>`).join('')}`;
   const tc={};list.forEach(b=>tagsOf(b).forEach(t=>tc[t]=(tc[t]||0)+1));
   const top=Object.entries(tc).sort((a,b)=>b[1]-a[1]).slice(0,5),tm=Math.max(1,...top.map(t=>t[1]));
-  $('bars').innerHTML=top.length?top.map((t,i)=>`<text x="0" y="${i*28+14}">#${esc(t[0])}</text><rect x="80" y="${i*28+3}" width="170" height="14" rx="7" fill="var(--line)"/><rect class="b" x="80" y="${i*28+3}" height="14" rx="7" width="0" data-w="${170*t[1]/tm}" fill="var(--accent2)"/>`).join(''):'<text x="0" y="20">해시태그가 없습니다</text>';
+  
   if(A){
     A({targets:'#ln',strokeDashoffset:[A.setDashoffset,0],duration:1400,easing:'easeInOutSine'});
     A({targets:'#fill',opacity:[0,1],duration:900,delay:900,easing:'linear'});
@@ -213,8 +213,8 @@ function render(list,animate=true){
     const go=()=>{try{M.animate&&M.animate(fill,{width:['0%',w]},{duration:1.1,ease:[.22,1,.36,1]})}catch(e){}fill.style.width=w};
     card.style.opacity=1;fill.style.width=w;
     if(M.animate){
-      card.addEventListener('mouseenter',()=>M.animate(card,{transform:'translateY(-4px)'},{type:'spring',stiffness:300,damping:20}));
-      card.addEventListener('mouseleave',()=>M.animate(card,{transform:'translateY(0px)'},{type:'spring',stiffness:300,damping:20}));
+      
+      
     }
   });
 }
