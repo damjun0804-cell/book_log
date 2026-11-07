@@ -91,7 +91,7 @@ img.cover{cursor:zoom-in}
 
   <section class="panel" id="panel">
     <h2><span id="fh">새 도서 기록 추가</span><button class="btn ghost" id="back" type="button">← 돌아가기</button></h2>
-    <div class="shelf"><b>📌 상단 현황 수정</b><label>현재 대여 중 (권)<input type="number" id="sLend" min="0"></label><label>읽을 예정 · 추천받은 책 (권)<input type="number" id="sWish" min="0"></label><button class="btn" id="sSave" type="button">적용</button></div>
+    <div class="shelf"><b>📌 상단 현황 수정</b><label>현재 대여 중 (권)<input type="number" id="sLend" min="0"></label><label>읽을 예정 (권)<input type="number" id="sWish" min="0"></label><button class="btn" id="sSave" type="button">적용</button></div>
     <form class="grid" id="form">
       <div class="f full"><label>도서 제목 *</label><input id="title" required placeholder="예: 50센티 더 가까워지는 선물보다 좋은 말"></div>
       <div class="f"><label>저자</label><input id="author"></div>
@@ -163,7 +163,7 @@ function renderStats(list){
   const yr=list.filter(b=>new Date(b.endDate||b.createdAt).getFullYear()===new Date().getFullYear()).length;
   const spans=list.filter(b=>b.startDate&&b.endDate).map(b=>(new Date(b.endDate)-new Date(b.startDate))/864e5+1).filter(n=>n>0);const avg=spans.length?Math.round(spans.reduce((a,n)=>a+n,0)/spans.length):'-';
   const tc={};list.forEach(b=>tagsOf(b).forEach(t=>tc[t]=(tc[t]||0)+1));const tt=Object.entries(tc).sort((a,b)=>b[1]-a[1])[0];const topT=tt?'#'+tt[0]:'-';
-  const items=[['전체 기록',list.length,'권'],['현재 대여 중',shelf.lending,'권'],['읽을 예정 (추천받은 책)',shelf.wish,'권']];
+  const items=[['전체 기록',list.length,'권'],['현재 대여 중',shelf.lending,'권'],['읽을 예정',shelf.wish,'권']];
   $('stats').innerHTML=items.map(i=>`<div class="stat"><small>${i[0]}</small><b data-to="${i[1]}" data-s="${i[2]}">0</b></div>`).join('');
   $('stats').querySelectorAll('b').forEach(b=>{if(isNaN(+b.dataset.to)){b.textContent=b.dataset.to;b.style.fontSize='1.3rem';b.style.lineHeight='2.2rem';b.style.overflow='hidden';b.style.textOverflow='ellipsis';b.style.whiteSpace='nowrap'}else count(b,+b.dataset.to,b.dataset.s)});
   if(A)A({targets:'.stat',opacity:[0,1],translateY:[16,0],delay:A.stagger(70),duration:700,easing:'easeOutCubic'});
@@ -243,7 +243,7 @@ function closePanel(){
   M.animate?M.animate(p,{opacity:[1,0],transform:['none','translateY(-16px)']},{duration:.25}).finished.then(end):end();
 }
 $('add').onclick=async()=>{
-  const pw=prompt('관리자 비밀번호를 입력하세요:');if(pw===null)return;
+  const pw=prompt('비밀번호를 입력하세요:');if(pw===null)return;
   if(btoa(pw)!==PW)return alert('비밀번호가 올바르지 않습니다.');
   $('form').reset();$('form').dataset.id='';$('fh').textContent='새 도서 기록 추가';$('save').textContent='도서 기록 저장하기';
   openPanel();await st.inc(-1);showViews();
