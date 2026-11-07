@@ -97,7 +97,8 @@ img.cover{cursor:zoom-in}
       <div class="f"><label>저자</label><input id="author"></div>
       <div class="f"><label>출판사 및 연도</label><input id="publisher" placeholder="예: 밀리언서재 (2022)"></div>
       <div class="f full"><label>해시태그</label><input id="hashtags" placeholder="자기계발, 대화법 (쉼표나 띄어쓰기로 구분)"></div>
-      <div class="f full"><label>표지 이미지</label><input type="file" id="cover" accept="image/*"></div>
+      <div class="f full"><label>표지 이미지 링크 (권장 · 고화질)</label><input id="coverUrl" placeholder="https://… 이미지 주소를 붙여넣으세요"></div>
+      <div class="f full"><label>또는 표지 이미지 파일 (저용량으로 변환되어 저장됨)</label><input type="file" id="cover" accept="image/*"></div>
       <div class="f"><label>읽기 시작한 날짜</label><input type="date" id="startDate"></div>
       <div class="f"><label>완독한 날짜</label><input type="date" id="endDate"></div>
       <div class="f full"><label>독서 진행률 (%)</label><input type="number" id="progress" min="0" max="100" value="0"></div>
@@ -117,7 +118,7 @@ img.cover{cursor:zoom-in}
   <div class="search"><input id="q" placeholder="제목, 저자, 한줄평, 해시태그 검색…"></div>
   <main class="list" id="list"></main>
   <p class="note" id="note"></p>
-  <div class="lb" id="lb"><img id="lbImg" alt="표지 크게 보기"></div>
+  <div class="lb" id="lb"><img id="lbImg" referrerpolicy="no-referrer" alt="표지 크게 보기"></div>
 </div>
 
 <script>
@@ -198,7 +199,7 @@ function render(list,animate=true){
   if(!list.length){$('list').innerHTML='<div class="empty">등록되거나 검색된 도서 기록이 없습니다.</div>';return}
   $('list').innerHTML=list.map(b=>{
     const p=pct(b),h=hue(b.title||'x');
-    const cover=b.coverUrl?`<img class="cover" src="${esc(b.coverUrl)}" alt="${esc(b.title)} 표지">`:`<div class="cover" style="background:linear-gradient(145deg,hsl(${h} 70% 55%),hsl(${(h+50)%360} 65% 38%))">${esc(b.title)}</div>`;
+    const cover=b.coverUrl?`<img class="cover" referrerpolicy="no-referrer" loading="lazy" src="${esc(b.coverUrl)}" alt="${esc(b.title)} 표지">`:`<div class="cover" style="background:linear-gradient(145deg,hsl(${h} 70% 55%),hsl(${(h+50)%360} 65% 38%))">${esc(b.title)}</div>`;
     const date=(b.startDate||b.endDate)?`📅 ${esc(b.startDate||'')} ~ ${esc(b.endDate||'')}`:'';
     return `<article class="book" data-id="${esc(b.id)}">
      <div class="acts"><button data-a="edit">수정</button><button class="del" data-a="del">삭제</button></div>
@@ -259,7 +260,7 @@ $('list').onclick=async e=>{
   if(a==='edit'){
     $('form').dataset.id=id;
     Object.entries({title:b.title,author:b.author,publisher:b.publisher,hashtags:b.hashtags,startDate:b.startDate,endDate:b.endDate,progress:b.progressPercent||0,quotePage:b.quotePage,quote:b.quoteContent,review:b.oneLineReview}).forEach(([k,v])=>$(k).value=v||'');
-    $('cover').value='';$('fh').textContent='도서 기록 수정하기';$('save').textContent='수정사항 저장하기';openPanel();
+    $('coverUrl').value=/^https?:/.test(b.coverUrl||'')?b.coverUrl:'';$('cover').value='';$('fh').textContent='도서 기록 수정하기';$('save').textContent='수정사항 저장하기';openPanel();
   }
 };
 const resize=f=>new Promise(r=>{const fr=new FileReader();fr.onload=e=>{const i=new Image();i.onload=()=>{const c=document.createElement('canvas');c.width=400;c.height=i.height*400/i.width;c.getContext('2d').drawImage(i,0,0,c.width,c.height);r(c.toDataURL('image/jpeg',.7))};i.src=e.target.result};fr.readAsDataURL(f)});
@@ -267,7 +268,7 @@ $('form').onsubmit=async e=>{
   e.preventDefault();
   const id=$('form').dataset.id,old=books.find(b=>b.id===id),f=$('cover').files[0];
   const data={title:$('title').value.trim(),author:$('author').value.trim(),publisher:$('publisher').value.trim(),hashtags:$('hashtags').value.trim(),
-   coverUrl:f?await resize(f):(old?old.coverUrl||'':''),startDate:$('startDate').value,endDate:$('endDate').value,progressPercent:$('progress').value,
+   coverUrl:f?await resize(f):($('coverUrl').value.trim()||(old?old.coverUrl||'':'')),startDate:$('startDate').value,endDate:$('endDate').value,progressPercent:$('progress').value,
    quotePage:$('quotePage').value.trim(),quoteContent:$('quote').value.trim(),oneLineReview:$('review').value.trim()};
   try{await st.save(id||null,data);closePanel();await load()}catch(err){alert('처리 중 오류가 발생했습니다: '+err.message)}
 };
