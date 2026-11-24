@@ -76,10 +76,50 @@ img.cover{cursor:zoom-in}
 .lb{position:fixed;inset:0;background:rgba(0,0,0,.78);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:none;place-items:center;z-index:100;padding:1.5rem;cursor:zoom-out;opacity:0;transition:opacity .25s}.lb.on{opacity:1}.lb img{max-width:min(92vw,480px);max-height:88vh;border-radius:12px;box-shadow:0 30px 80px rgba(0,0,0,.6);transform:scale(.92);transition:transform .25s}.lb.on img{transform:none}
 @media(max-width:680px){body{padding:1rem .6rem 3rem}.wrap{padding:1rem;border-radius:16px}.stats{gap:.5rem}.stat{padding:.7rem}.stat b{font-size:1.3rem}.top{grid-template-columns:1fr}.cover{margin:0 auto}.title{padding-right:0}.grid{grid-template-columns:1fr}.f.full{grid-column:span 1}.acts{position:static;margin-bottom:.6rem;justify-content:flex-end}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* 배경 일러스트: 독서 테마 (책 더미 · 램프 · 달 · 펼친 책) */
+html::before{content:"";position:fixed;inset:-10%;z-index:-1;pointer-events:none;background:radial-gradient(38% 34% at 20% 22%,rgba(255,255,255,.16),transparent 70%),radial-gradient(34% 38% at 84% 72%,rgba(176,182,208,.2),transparent 70%);filter:blur(46px)}
+html::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .1 0'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23n)'/%3E%3C/svg%3E") 0 0/200px}
+body::after{display:none}
+.art{position:fixed;z-index:-1;pointer-events:none;fill:none;stroke:rgba(235,235,246,.72);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;overflow:visible}
+.a1{left:2vw;bottom:1vh;width:clamp(130px,16vw,240px)}
+.a2{left:4vw;top:0;width:clamp(130px,14vw,210px)}
+.a3{right:2vw;bottom:1vh;width:clamp(170px,20vw,290px)}
+.a4{right:3vw;top:2vh;width:clamp(115px,12.5vw,185px)}
+.fly{animation:fl 7s ease-in-out infinite alternate}
+.glow{animation:tw 4s ease-in-out infinite alternate}
+@keyframes fl{from{transform:translateY(6px)}to{transform:translateY(-8px)}}
+@keyframes tw{from{opacity:.35}to{opacity:1}}
+@media(max-width:900px){.art{opacity:.4}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
 </head>
 <body>
+<svg class="art a1" viewBox="0 0 300 260" aria-hidden="true"><defs><linearGradient id="bk" x1="0" x2="1"><stop offset="0" stop-color="#2d2d36"/><stop offset="1" stop-color="#17171c"/></linearGradient></defs>
+<g fill="url(#bk)"><g><rect x="14" y="206" width="262" height="44" rx="5"/><path d="M44 206v44M54 206v44M236 206v44"/><rect x="110" y="218" width="84" height="20" rx="3" fill="none"/></g>
+<g transform="rotate(-1.5 143 185)"><rect x="36" y="164" width="214" height="42" rx="5"/><path d="M62 164v42M72 164v42M226 164v42"/><path d="M110 178h70M110 190h44" stroke-width="1.2"/></g>
+<g transform="rotate(2 120 144)"><rect x="26" y="124" width="190" height="40" rx="5"/><path d="M50 124v40M60 124v40M192 124v40"/></g></g>
+<g transform="translate(112 78)" fill="url(#bk)"><path d="M0 8h58v22a16 16 0 0 1-16 16h-26A16 16 0 0 1 0 30z"/><path d="M58 16h6a10 10 0 0 1 0 20h-6" fill="none"/><path d="M16 2c-6-6 6-10 0-18M30 2c-6-6 6-10 0-18M44 2c-6-6 6-10 0-18" stroke-opacity=".5"/></g>
+<g transform="translate(30 62)" fill="url(#bk)"><path d="M2 38h34l-5 24H7z"/><path d="M19 38C19 24 19 14 19 4" fill="none"/><ellipse cx="9" cy="22" rx="6" ry="14" transform="rotate(-35 9 22)"/><ellipse cx="30" cy="18" rx="6" ry="14" transform="rotate(35 30 18)"/><ellipse cx="19" cy="8" rx="5" ry="12"/></g></svg>
+
+<svg class="art a2" viewBox="0 0 300 420" aria-hidden="true"><defs><linearGradient id="cone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".26"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>
+<path d="M120 114L180 114L292 420H8Z" fill="url(#cone)" stroke="none"/><path d="M150 0V70"/><path d="M110 70h80l22 42H88z" fill="#1f1f26"/><path d="M122 84h56" stroke-opacity=".4"/><circle cx="150" cy="118" r="26" fill="#fff" fill-opacity=".14" stroke="none" class="glow"/><circle cx="150" cy="118" r="8" fill="#fff" stroke="none"/></svg>
+
+<svg class="art a3" viewBox="0 0 360 260" aria-hidden="true"><defs><linearGradient id="pg" x1="0" x2="1"><stop offset="0" stop-color="#f0f0f6"/><stop offset="1" stop-color="#b9b9c6"/></linearGradient></defs>
+<ellipse cx="180" cy="244" rx="150" ry="9" fill="#fff" fill-opacity=".07" stroke="none"/>
+<path d="M180 170C140 148 84 146 24 158V228C84 216 140 218 180 240C220 218 276 216 336 228V158C276 146 220 148 180 170Z" fill="#101014"/>
+<path d="M180 160C142 138 88 136 34 148V214C88 202 142 204 180 226Z" fill="url(#pg)" fill-opacity=".92"/><path d="M180 160C218 138 272 136 326 148V214C272 202 218 204 180 226Z" fill="url(#pg)" fill-opacity=".86"/>
+<g stroke="#6a6a76" stroke-width="1.2" stroke-opacity=".8"><path d="M54 162c30-4 60-2 108 12M54 174c30-4 60-2 108 12M54 186c30-4 60-2 108 12M306 162c-30-4-60-2-108 12M306 174c-30-4-60-2-108 12M306 186c-30-4-60-2-108 12"/></g><path d="M180 160V226" stroke="#6a6a76"/>
+<g class="fly"><g transform="translate(112 66) rotate(-18)"><path d="M0 0h34l10 10v34H0z" fill="#e9e9f0" fill-opacity=".9" stroke="none"/><path d="M34 0v10h10M8 20h26M8 28h26M8 36h18" stroke="#8a8a96" stroke-width="1.2"/></g>
+<g transform="translate(206 34) rotate(12) scale(.8)" opacity=".7"><path d="M0 0h34l10 10v34H0z" fill="#e9e9f0" fill-opacity=".9" stroke="none"/><path d="M34 0v10h10M8 20h26M8 28h26" stroke="#8a8a96" stroke-width="1.2"/></g>
+<g transform="translate(252 92) rotate(-8) scale(.6)" opacity=".5"><path d="M0 0h34l10 10v34H0z" fill="#e9e9f0" fill-opacity=".9" stroke="none"/></g>
+<path d="M270 30q8-9 16 0q8-9 16 0M70 40q6-7 12 0q6-7 12 0" stroke-opacity=".6"/></g>
+<g fill="#fff" stroke="none" class="glow"><circle cx="170" cy="100" r="2"/><circle cx="64" cy="96" r="1.6"/><circle cx="300" cy="70" r="1.8"/></g></svg>
+
+<svg class="art a4" viewBox="0 0 300 260" aria-hidden="true"><mask id="mm"><rect width="300" height="260" fill="#fff"/><circle cx="172" cy="100" r="52" fill="#000"/></mask>
+<circle cx="140" cy="112" r="64" fill="#e9e9f0" fill-opacity=".92" stroke="none" mask="url(#mm)"/>
+<g fill="#fff" stroke="none" class="glow"><path d="M236 40l3 9 9 3-9 3-3 9-3-9-9-3 9-3z"/><path d="M262 120l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/><path d="M216 160l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/><circle cx="190" cy="30" r="1.8"/><circle cx="280" cy="76" r="1.6"/><circle cx="250" cy="200" r="1.6"/><circle cx="90" cy="30" r="1.5"/></g></svg>
+
 <div class="wrap">
   <header>
     <div><h1><span id="secret">Book</span> <span>Log</span></h1></div>
